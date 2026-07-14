@@ -1,0 +1,45 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: # Позволяет запускать сборку вручную кнопкой
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Get Date
+      # Кеширование, чтобы сборка шла быстрее
+      id: get-date
+      run: |
+        echo "date=$(date -u +'%Y%m%d')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Cache Buildozer global directory
+      uses: actions/cache@v3
+      with:
+        path: ~/.buildozer
+        key: buildozer-global-${{ steps.get-date.outputs.date }}
+
+    - name: Cache Android SDK/NDK
+      uses: actions/cache@v3
+      with:
+        path: ~/.android
+        key: android-sdk-${{ steps.get-date.outputs.date }}
+
+    - name: Buildozer Android Action
+      uses: Actions-R-Us/buildozer-action@v2
+      with:
+        subcommand: debug
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: GF-GAN-Studio-APK
+        path: bin/*.apk
+        
