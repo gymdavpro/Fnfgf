@@ -18,18 +18,13 @@ jobs:
       with:
         python-version: '3.10'
 
-    # Мы временно убрали кэширование, чтобы грязный кэш не ломал сборку. 
-    # Как только всё соберётся успешно один раз, кэш можно будет вернуть.
-
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install Cython==0.29.33 virtualenv buildozer
 
-    - name: Clear and Build with Buildozer
+    - name: Build with Buildozer
       run: |
-        # Очищаем старые остатки сборки внутри контейнера
-        buildozer android clean
-        # Запускаем чистую сборку с авто-согласием на лицензии SDK
+        # Запускаем сборку напрямую. Так как кэша нет, она сама пойдёт "с нуля"
         buildozer -v android debug --auto-accept
         
