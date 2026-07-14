@@ -25,9 +25,17 @@ jobs:
 
     - name: Pre-install Android Build-Tools (Fix AIDL Error)
       run: |
-        # Используем предустановленный в GitHub Actions Android SDK
-        # Устанавливаем актуальные build-tools, где точно есть инструмент aidl
+        # Устанавливаем нужные build-tools в системный Android SDK
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;33.0.2" "platforms;android-33"
+
+    - name: Create Symlinks for Buildozer
+      run: |
+        # Создаем структуру папок, которую ожидает увидеть Buildozer
+        mkdir -p /home/runner/.buildozer/android/platform
+        
+        # Делаем символическую ссылку: когда Buildozer пойдет в свою папку android-sdk, 
+        # он автоматически перенаправится в готовую системную папку $ANDROID_HOME
+        ln -s $ANDROID_HOME /home/runner/.buildozer/android/platform/android-sdk
 
     - name: Install Python build tools
       run: |
@@ -36,8 +44,8 @@ jobs:
 
     - name: Build with Buildozer
       run: |
-        # Указываем Buildozer использовать системные пути Android SDK, которые мы только что пропатчили
-        export ANDROIDSDK=$ANDROID_HOME
+        # Передаем переменные окружения напрямую в команду сборки
+        export ANDROIDSDK=/home/runner/.buildozer/android/platform/android-sdk
         export ANDROIDNDK=$ANDROID_NDK_HOME
         buildozer -v android debug --auto-accept
         
