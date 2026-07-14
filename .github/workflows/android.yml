@@ -28,14 +28,19 @@ jobs:
         # Устанавливаем нужные build-tools в системный Android SDK
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;33.0.2" "platforms;android-33"
 
-    - name: Create Symlinks for Buildozer
+    - name: Create Symlinks for Buildozer (Fix SDK and Sdkmanager paths)
       run: |
-        # Создаем структуру папок, которую ожидает увидеть Buildozer
+        # Создаем структуру папок для Buildozer
         mkdir -p /home/runner/.buildozer/android/platform
         
-        # Делаем символическую ссылку: когда Buildozer пойдет в свою папку android-sdk, 
-        # он автоматически перенаправится в готовую системную папку $ANDROID_HOME
+        # Ссылка на весь Android SDK
         ln -s $ANDROID_HOME /home/runner/.buildozer/android/platform/android-sdk
+        
+        # Решаем проблему с путем sdkmanager:
+        # Buildozer ищет его в android-sdk/tools/bin/sdkmanager, 
+        # сделаем ссылку из cmdline-tools в старый путь tools
+        mkdir -p $ANDROID_HOME/tools
+        ln -s $ANDROID_HOME/cmdline-tools/latest/bin $ANDROID_HOME/tools/bin
 
     - name: Install Python build tools
       run: |
@@ -44,7 +49,6 @@ jobs:
 
     - name: Build with Buildozer
       run: |
-        # Передаем переменные окружения напрямую в команду сборки
         export ANDROIDSDK=/home/runner/.buildozer/android/platform/android-sdk
         export ANDROIDNDK=$ANDROID_NDK_HOME
         buildozer -v android debug --auto-accept
