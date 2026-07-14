@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch: # Позволяет запускать сборку вручную кнопкой
+  workflow_dispatch: # Позволяет запускать сборку вручную кнопкой через вкладку Actions
 
 jobs:
   build:
@@ -11,34 +11,42 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-data-cache: true
+        python-version: '3.10'
 
     - name: Get Date
-      # Кеширование, чтобы сборка шла быстрее
       id: get-date
       run: |
         echo "date=$(date -u +'%Y%m%d')" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Cache Buildozer global directory
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.buildozer
         key: buildozer-global-${{ steps.get-date.outputs.date }}
 
     - name: Cache Android SDK/NDK
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.android
         key: android-sdk-${{ steps.get-date.outputs.date }}
 
-    - name: Buildozer Android Action
-      uses: Actions-R-Us/buildozer-action@v2
-      with:
-        subcommand: debug
+    # Используем официальный проверенный метод сборки Buildozer через Docker/контейнер
+    - name: Build with Buildozer
+      run: |
+        pip install --upgrade pip
+        pip install Cython virtualenv buildozer
+        # Запуск сборки в тихом режиме авто-согласия с лицензиями Android SDK
+        yes | buildozer -v android debug
 
     - name: Upload APK Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: GF-GAN-Studio-APK
         path: bin/*.apk
