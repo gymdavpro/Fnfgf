@@ -18,13 +18,26 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install dependencies
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libssl-dev libffi-dev libsqlite3-dev tk-dev libgstreamer1.0-dev glib-2.0-dev libcairo2-dev libpango1.0-dev libgl1-mesa-dev libgstreamer-plugins-base1.0-dev
+
+    - name: Pre-install Android Build-Tools (Fix AIDL Error)
+      run: |
+        # Используем предустановленный в GitHub Actions Android SDK
+        # Устанавливаем актуальные build-tools, где точно есть инструмент aidl
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;33.0.2" "platforms;android-33"
+
+    - name: Install Python build tools
       run: |
         pip install --upgrade pip
         pip install Cython==0.29.33 virtualenv buildozer
 
     - name: Build with Buildozer
       run: |
-        # Запускаем сборку напрямую. Так как кэша нет, она сама пойдёт "с нуля"
+        # Указываем Buildozer использовать системные пути Android SDK, которые мы только что пропатчили
+        export ANDROIDSDK=$ANDROID_HOME
+        export ANDROIDNDK=$ANDROID_NDK_HOME
         buildozer -v android debug --auto-accept
         
