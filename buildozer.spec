@@ -1,4 +1,6 @@
 [app]
+title = GF GAN Studio
+
 # (str) Version of the application
 version = 1.0
 
